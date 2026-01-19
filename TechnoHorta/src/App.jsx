@@ -26,7 +26,7 @@ function App() {
           roll a D20: {count}
         </button>
         <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
+          Just working on login page now :)
         </p>
       </div>
       <p className="read-the-docs">
