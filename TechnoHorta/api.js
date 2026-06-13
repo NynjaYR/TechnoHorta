@@ -8,10 +8,18 @@ const app = express();
 const PORT = 3000;
 
 const connectdb = async () => {
-  await mongoose.connect(process.env.MONGO_URI);
-  console.log(`conectado ao db`);
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log(`conectado ao db`);
+  } catch (error) {
+    console.log(`erro ao tentar conectar no db`, error);
+  }
 };
 
-app.get("/", (req, res) => {});
+connectdb();
+
+app.post("/TechnoHorta", (req, res) => {});
+
+//app.get("/", (req, res) => {});
 
 app.listen(PORT, () => console.log(`servidor rodando na porta ${PORT}`));

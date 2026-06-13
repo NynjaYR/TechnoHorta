@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "dotenvDHT sensor library for ESPx": "^1.19.0",
+    "MQTTPubSubClient": "^0.3.2"
+  },
+  "links": {
+    "DHT": "https://www.arduinolibraries.info/libraries/mqtt-pub-sub-client",
+    "PubSubClient": "https://www.arduinolibraries.info/libraries/dht-sensor-library-for-es-px"
+  }
+}
