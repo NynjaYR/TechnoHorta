@@ -12,6 +12,10 @@
 
 String messagemqtt = "";
 
+
+float umidEnvioA = 0;
+float tempEnvioA = 0;
+
 int cansendmsg_A = 1;
 int laststate_A = 0;
 
@@ -48,7 +52,6 @@ PubSubClient mqttClient(wifiClient); // Create an MQTT client using WiFi
 
 String currentState = "";       // Store the current state ("on" or "off")
 
-//
 
 int sens_humsolo_A =34;   // ¨¨¨setar posicionamento dos sensores¨¨¨
 int sens_humsolo_B =35;
@@ -89,7 +92,7 @@ int estado_humsolo_C=0;
 
 //
 
-const char* serverName = "RESOLVER LOGO ISSO"; // (em progresso)
+const char* serverName = "http://192.168.3.6:3000/btstats/"; // (em progresso)
 
 DHTesp dhtSensor;        //¨¨¨Creio que seta como objeto¨¨¨
 
@@ -161,6 +164,25 @@ void loop()
 {
     if (!mqttClient.connected()) {
     reconnectToMQTT();
+  
+  
+  //   teste random
+
+  // Cria uma temperatura que oscila de forma realista entre 22°C e 28°C usando o tempo do millis
+  float tempEnvio = 25.0 + (3.0 * sin(millis() / 50000.0)); 
+  
+  // Cria uma umidade aleatória que varia entre 55% e 65% a cada envio
+  float umidEnvio = random(55, 66); 
+
+  // Ajuste opcional para os sensores de solo também simularem valores se quiser:
+  // read_sens_humsolo_A = random(40, 50);
+  // read_sens_humsolo_B = random(60, 70);
+  // read_sens_humsolo_C = random(30, 35);
+
+  umidEnvioA = umidEnvio;
+  tempEnvioA = tempEnvio;
+//
+  
   }
   
   mqttClient.loop(); // Process incoming MQTT messages
@@ -180,18 +202,21 @@ unsigned long tempoAtual2 = millis();
 
 //nao estou suportando mais, ja sao 1:45 da manha e eu aqui ainda// if else sensores e botao digital
 
-if(read_sens_humsolo_A <= 30 && cansendmsg_A == 1 || messagemqtt == "rele_on_A" && laststate_A != 1) {
+if (tempoAtual2 - ultimoTempoEnvio2 >= intervaloEnvio2) {
+  ultimoTempoEnvio2 = tempoAtual2;
+
+if(/*read_sens_humsolo_A <= 30 && cansendmsg_A == 1 ||*/ messagemqtt == "rele_on_A" && laststate_A != 1) {
   estado_humsolo_A = 1;
   laststate_A = 1;
   cansendmsg_A = 0;
   Serial.println("Setor_A_Ligado");
-} else if (read_sens_humsolo_A > 30 && cansendmsg_A == 0 || messagemqtt == "rele_off_A" && laststate_A != 0) {
+} else if (/*read_sens_humsolo_A > 30 && cansendmsg_A == 0 ||*/ messagemqtt == "rele_off_A" && laststate_A != 0) {
     estado_humsolo_A=0;
     laststate_A = 0;
     cansendmsg_A = 1;
     Serial.println("Setor_A_Desligado");
 }
-
+/* mais status de sensores lembrar de tirar uma media dos valores dos sensores
 if(read_sens_humsolo_B <= 40 && cansendmsg_B == 1 || messagemqtt == "rele_on_B" && laststate_B != 1) {
   estado_humsolo_B = 1;
   laststate_B = 1;
@@ -215,8 +240,10 @@ if(read_sens_humsolo_C <= 40 && cansendmsg_C == 1 || messagemqtt == "rele_on_C" 
     cansendmsg_C = 1;
     Serial.println("Setor_C_Desligado");
 }
+*/}
 
 //
+
 /*
 {
   digitalWrite(solenoide_A, LOW);
@@ -228,14 +255,14 @@ if(read_sens_humsolo_C <= 40 && cansendmsg_C == 1 || messagemqtt == "rele_on_C" 
 
 /*¨¨¨¨Mostrar valores no serial referente a umidade e temperatura¨¨¨¨*/
  TempAndHumidity data = dhtSensor.getTempAndHumidity();
-
+/*
 if((read_sens_humsolo_A <=30) || (read_sens_humsolo_B <=40) || (read_sens_humsolo_C <=60)) {
   digitalWrite(solenoide_A,estado_humsolo_A);
   digitalWrite(solenoide_B,estado_humsolo_B);
   digitalWrite(solenoide_C,estado_humsolo_C);
-
  TempAndHumidity  data = dhtSensor.getTempAndHumidity();
 }
+*/
 
 //envio para http
 if (tempoAtual - ultimoTempoEnvio >= intervaloEnvio) {
@@ -246,17 +273,16 @@ if (tempoAtual - ultimoTempoEnvio >= intervaloEnvio) {
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
 
-    String json = "{";
-    json += "\"temperatura\":" + String(data.temperature, 2)    + ",";
-    json += "\"umidade_solo_A\":" + String(read_sens_humsolo_A) + ",";
-    json += "\"umidade_solo_B\":" + String(read_sens_humsolo_B) + ",";
-    json += "\"umidade-solo_C\":" + String(read_sens_humsolo_C) + ",";
-    json += "\"umidade\":" + String(data.humidity, 1)  ;
-    json += "}";
-    Serial.print(json);
+   // Substitua a montagem do JSON por esta linha única e limpa:
+   // String json = "{\"temperatura\":" + String(data.temperature, 2) + ",\"umidade_solo_A\":" + String(read_sens_humsolo_A, 0) + ",\"umidade_solo_B\":" + String(read_sens_humsolo_B, 0) + ",\"umidade_solo_C\":" + String(read_sens_humsolo_C, 0) + ",\"umidade\":" + String(data.humidity, 1) + "}";
+    String json = "{\"temperatura\":" + String(umidEnvioA, 2) + ",\"umidade_solo_A\":" + String(read_sens_humsolo_A, 0) + ",\"umidade_solo_B\":" + String(read_sens_humsolo_B, 0) + ",\"umidade_solo_C\":" + String(read_sens_humsolo_C, 0) + ",\"umidade\":" + String(tempEnvioA, 2) + "}";
+    
+    json.trim(); // 💡 REMOVE espaços invisíveis que causam o erro 400
+    Serial.print("JSON Enviado: ");
+    Serial.println(json);
     int httpResponseCode = http.POST(json); //final,, envio
 
-    Serial.print("Código HTTP: ");
+    Serial.print("http://192.168.3.6:3000/btstats");
     Serial.println(httpResponseCode);
 
     http.end();
